@@ -3,14 +3,33 @@
 #include <string.h>
 
 #define MAX_LINE_LENGHT 1000
+#define INITIAL_SIZE 16
+
+int userInput(int size, char **input);
+
 int main()
 {
     //printf("test");
-    int count = 0, dvaPrazdne =0, lenght =0, size = 16;
-    char **intput = NULL;
-    char buffer[MAX_LINE_LENGHT];
+    int count = 0, size = INITIAL_SIZE;
+    char **input = NULL;
+    input = (char**)malloc(size * sizeof(char *));
+    
+    count = userInput(size, input);
+    
+    printf("riadkov %d\n", count);
+    for (int i = 0; i < count; i++)
+    {
+        printf("%s", input[i]);
+    }
 
-    intput = (char**)malloc(size * sizeof(char *));
+    return 0;
+}
+
+int userInput(int size, char **input)
+{
+    int count = 0, dvaPrazdne =0, lenght =0;
+
+    char buffer[MAX_LINE_LENGHT];
     
     do
     {
@@ -19,35 +38,24 @@ int main()
         if (count == size)
         {
             size = size *2;
-            intput = (char**)realloc(intput, size * sizeof(char*));
+            input = (char**)realloc(input, size * sizeof(char*));
         }
         
         lenght = strlen(buffer);
         
         if (buffer[0] == '\n')
         {
-            //printf("dlzka riadku je: %d\n", lenght);
-            intput[count] = (char*)malloc(2 * sizeof(char));
+            input[count] = (char*)malloc(2 * sizeof(char));
             dvaPrazdne++;
         }
         else
         {
             dvaPrazdne = 0;
-            intput[count] = (char*)malloc((lenght + 1) * sizeof(char));
+            input[count] = (char*)malloc((lenght + 1) * sizeof(char));
         }
         
-        //printf("velkost input[%d] = %d\n",count, sizeof(intput[count]));
-        strcpy(intput[count], buffer);
-        //printf("input[%d] = '%s'\n",count, intput[count]);
-        //printf("velkost input = %d", sizeof(intput));
+        strcpy(input[count], buffer);
         count++;
     } while (dvaPrazdne <2);
-    
-    // printf("riadkov %d\n", count);
-    // for (int i = 0; i < count; i++)
-    // {
-    //     printf("%s", intput[i]);
-    // }
-
-    return 0;
+    return count-2;
 }
