@@ -6,6 +6,9 @@
 #define MAX_LINE_LENGHT 1000
 #define INITIAL_SIZE 16
 #define SECTION_SEPARATOR '.'
+#define TRUE 1
+#define FALSE 0
+
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
@@ -29,13 +32,21 @@ int main(int argc, char* argv[])
         {
         case 'k':
             char *section;
-            //ak má section
+            int sectionExists = FALSE;
+            //ak je zadana nepovinna cast povinneho argumentu
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
                 extractSection(size, &section);
-                // printf("%s\n", section);
+                printf("%s\n", section);
                 
-                
+                for (int i = 0; i < lineCount; i++)
+                {
+                    if( (input[i][0] =='[') && (strstr(input[i], section) != NULL))
+                    {
+                        sectionExists = TRUE; 
+                        break;
+                    }
+                }
             }
             else
             {
@@ -59,6 +70,13 @@ int main(int argc, char* argv[])
             return 0;
         }
     }
+
+    if (argc == 1)
+    {
+        printLines(lineCount, input); 
+        return 0;
+    }
+
     if (optind + 1 == argc && isU == 1)
     {
         printf("bol zadany jeden non-option argument a to %s\n", argv[optind]);
@@ -69,11 +87,6 @@ int main(int argc, char* argv[])
         return 0;
     } 
 
-    if (optind == argc)
-    {
-        printLines(lineCount, input); 
-        return 0;
-    }
 
     //uvolnenie naalokovanej pamete
     for (int i = 0; i < lineCount; i++)
