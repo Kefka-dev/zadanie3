@@ -8,11 +8,12 @@
 #define SECTION_SEPARATOR '.'
 #define TRUE 1
 #define FALSE 0
-
+#define SECTION_NOT_FOUND -1
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
 void extractSection(int size,char **p_section);
+int findSectionLine(int lineAmount, char **p_input, char *p_section);
 
 int main(int argc, char* argv[])
 {
@@ -36,17 +37,27 @@ int main(int argc, char* argv[])
             //ak je zadana nepovinna cast povinneho argumentu
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
+                
                 extractSection(size, &section);
                 printf("%s\n", section);
                 
-                for (int i = 0; i < lineCount; i++)
-                {
-                    if( (input[i][0] =='[') && (strstr(input[i], section) != NULL))
-                    {
-                        sectionExists = TRUE; 
-                        break;
-                    }
-                }
+                int sectionLine = findSectionLine(lineCount, input, section);
+                
+                // if (sectionLine != SECTION_NOT_FOUND)
+                // {
+                    
+
+                    
+                // }
+                
+                // for (int i = 0; i < lineCount; i++)
+                // {
+                //     if( (input[i][0] =='[') && (strstr(input[i], section) != NULL))
+                //     {
+                //         sectionExists = TRUE; 
+                //         break;
+                //     }
+                // }
             }
             else
             {
@@ -150,4 +161,23 @@ void extractSection(int size , char **p_section)
     }
     *p_section = (char*)malloc((charCount+1)* sizeof(char));
     memcpy(*p_section, optarg, charCount);
+}
+
+
+
+int findSectionLine(int lineAmount, char **p_input, char *p_section)
+{
+    int exists = FALSE;
+    for (int i = 0; i < lineAmount; i++)
+    {
+        if( ((strchr(p_input[i], '[') != NULL) && (strstr(p_input[i], p_section) != NULL)))
+        {
+            return i;
+        }
+    }
+    if (exists = FALSE)
+    {
+        return SECTION_NOT_FOUND;
+    }
+    
 }
