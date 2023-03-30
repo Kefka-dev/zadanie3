@@ -5,10 +5,11 @@
 
 #define MAX_LINE_LENGHT 1000
 #define INITIAL_SIZE 16
-#define BODKA '.'
+#define SECTION_SEPARATOR '.'
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
+void extractSection(int size,char **p_section);
 
 int main(int argc, char* argv[])
 {
@@ -16,31 +17,31 @@ int main(int argc, char* argv[])
     char* optstring = ":k:s:u:";
     int isU = 0;
 
-    int count = 0, size = INITIAL_SIZE;
+    int lineCount = 0, size = INITIAL_SIZE;
     char **input = NULL;
 
     input = (char**)malloc(size * sizeof(char *));
     
-    count = userInput(size, &input);
+    lineCount = userInput(size, &input);
 
     while((opt = getopt(argc, argv, optstring)) != -1) {
         switch (opt)
         {
         case 'k':
-            // int i = 0;
-            // char *section;
-            // section = (char*)malloc(INITIAL_SIZE);
-            // while (optarg[i] != BODKA)
-            // {
-            //     if (i == INITIAL_SIZE)
-            //     {
-            //         size = size +16;
-            //         section = (char*)realloc(section, size);
-            //     }
+            char *section;
+            //ak má section
+            if (strchr(optarg, SECTION_SEPARATOR) != NULL)
+            {
+                extractSection(size, &section);
+                // printf("%s\n", section);
                 
-            //     section[i] = optarg[i+1];
-            //     i++;
-            // }
+                
+            }
+            else
+            {
+                printf("pipik");
+            }
+            
             
             break;
         case 's':
@@ -70,20 +71,16 @@ int main(int argc, char* argv[])
 
     if (optind == argc)
     {
-        printLines(count, input);
-        // for (int i = 0; i < count; i++)
-        // {
-        //     printf("%s", input[i]);
-        // }   
+        printLines(lineCount, input); 
         return 0;
     }
 
     //uvolnenie naalokovanej pamete
-    // for (int i = 0; i < count; i++)
-    // {
-    //     free(input[i]);
-    // }
-    // free(input);
+    for (int i = 0; i < lineCount; i++)
+    {
+        free(input[i]);
+    }
+    free(input);
 
     return 0;
 }
@@ -91,7 +88,7 @@ int main(int argc, char* argv[])
 int userInput(int size, char ***p_input)
 {
     int count = 0, dvaPrazdne =0, lenght =0;
-    char **new_array;
+    char **resizedInput;
     char buffer[MAX_LINE_LENGHT];
     do
     {
@@ -99,9 +96,9 @@ int userInput(int size, char ***p_input)
         
         if (count == size)
         {
-            size = size *2;
-            new_array = (char**)realloc(*p_input, size * sizeof(char*));
-            *p_input = new_array;
+            size = size + 16;
+            resizedInput = (char**)realloc(*p_input, size * sizeof(char*));
+            *p_input = resizedInput;
         }
         
         lenght = strlen(buffer);
@@ -129,4 +126,15 @@ void printLines(int amount, char **lines)
     {
         printf("%s", lines[i]);
     }   
+}
+
+void extractSection(int size , char **p_section)
+{
+    int charCount = 0;
+    while (optarg[charCount] != SECTION_SEPARATOR)
+    {
+        charCount++;
+    }
+    *p_section = (char*)malloc((charCount+1)* sizeof(char));
+    memcpy(*p_section, optarg, charCount);
 }
