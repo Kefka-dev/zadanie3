@@ -12,7 +12,7 @@
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
-void extractSection(int size,char **p_section);
+void extractSectionAndKey(int size,char **p_section, char** p_key);
 int findSectionLine(int lineAmount, char **p_input, char *p_section);
 
 int main(int argc, char* argv[])
@@ -33,30 +33,23 @@ int main(int argc, char* argv[])
         {
         case 'k':
             char *section;
+            char *key;
+            int dlzkaOptarg;
             int sectionExists = FALSE;
             //ak je zadana nepovinna cast povinneho argumentu
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
                 
-                extractSection(size, &section);
+                extractSectionAndKey(size, &section, &key);
                 printf("%s\n", section);
-                
+                printf("%s\n", key);
                 int sectionLine = findSectionLine(lineCount, input, section);
-                
+                printf("%d", dlzkaOptarg);
                 // if (sectionLine != SECTION_NOT_FOUND)
                 // {
                     
 
                     
-                // }
-                
-                // for (int i = 0; i < lineCount; i++)
-                // {
-                //     if( (input[i][0] =='[') && (strstr(input[i], section) != NULL))
-                //     {
-                //         sectionExists = TRUE; 
-                //         break;
-                //     }
                 // }
             }
             else
@@ -64,7 +57,7 @@ int main(int argc, char* argv[])
                 printf("pipik");
             }
             
-            
+            free(section);
             break;
         case 's':
             printf("Prepinac -s a jeho povinny argument %s\n", optarg);
@@ -152,18 +145,20 @@ void printLines(int amount, char **lines)
     }   
 }
 
-void extractSection(int size , char **p_section)
+void extractSectionAndKey(int size , char **p_section, char**p_key)
 {
-    int charCount = 0;
+    int charCount = 0, optargLenght, keyLenght;
+    optargLenght = strlen(optarg);
     while (optarg[charCount] != SECTION_SEPARATOR)
     {
         charCount++;
     }
+    keyLenght = optargLenght - charCount;
     *p_section = (char*)malloc((charCount+1)* sizeof(char));
-    memcpy(*p_section, optarg, charCount);
+    *p_key = (char*)malloc((keyLenght + 1) * sizeof(char));
+    strncpy(*p_section, optarg, charCount);
+    strncpy(*p_key, optarg+(charCount+1), keyLenght);
 }
-
-
 
 int findSectionLine(int lineAmount, char **p_input, char *p_section)
 {
