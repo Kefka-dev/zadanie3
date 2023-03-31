@@ -12,7 +12,7 @@ Connect automatically=true
 [Audio]
 Description=Speaker and microphone settings
 Output device=Realtek HD Audio
-Volume=72
+Volume=72   
 Balance=-8
 Input device=Sennheiser MKE 400
 

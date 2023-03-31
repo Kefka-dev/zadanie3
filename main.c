@@ -14,16 +14,17 @@
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
-void extractSectionAndKey(int size,char **p_section, char** p_key);
+void extractSectionAndKey(char **p_section, char** p_key);
 int findSectionLine(int lineAmount, char **p_input, char *p_section);
 int checkKey(char***p_input,char**p_key ,int lineToCheck, int keyLenght);
 void printKeyValue(char ***p_input, int lineNumber);
+void updateValue(char ***p_input, int lineNumber, char*** newValue);
 
 int main(int argc, char* argv[])
 {
     int opt;
     char* optstring = ":k:s:u:";
-    int isU = 0;
+    int isU = FALSE, sectionSet = FALSE;
 
     int lineCount = 0, size = INITIAL_SIZE;
     char **input = NULL;
@@ -32,24 +33,26 @@ int main(int argc, char* argv[])
     
     lineCount = userInput(size, &input);
 
+    char *section;
+    char *key;
+
     while((opt = getopt(argc, argv, optstring)) != -1) {
         switch (opt)
         {
         case 'k':
-            char *section;
-            char *key;
             int currentLine =0, keyLenght, isWantedKey;
             //ak je zadana nepovinna cast povinneho argumentu
             // printf("%s\n", optarg);
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
                 
-                extractSectionAndKey(size, &section, &key);
+                extractSectionAndKey(&section, &key);
                 // printf("%s\n", section);
                 // printf("%s\n", key);
                 keyLenght = strlen(key);
                 int sectionLine = findSectionLine(lineCount, input, section);
-                printf("section line = %d\n", sectionLine);
+                //printf("section line = %d\n", sectionLine);
+                //ak sekcia existuje
                 if (sectionLine != SECTION_NOT_FOUND)
                 {
                     currentLine = sectionLine +1;
@@ -112,7 +115,18 @@ int main(int argc, char* argv[])
             printf("Prepinac -s a jeho povinny argument %s\n", optarg);
             break;
         case 'u':
-            printf("Prepinac -u\n");
+            if (strchr(optarg, SECTION_SEPARATOR) != NULL)
+            {
+                extractSectionAndKey(&section, &key);
+                sectionSet = TRUE;
+                // printf("%s\n", section);
+                // printf("%s\n", key);
+            }
+            else
+            {
+                key = optarg;
+                // printf("%s\n", key);
+            }
             isU = 1;
             break;
         case '?':
@@ -130,11 +144,45 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    if (optind + 1 == argc && isU == 1)
+    if (optind + 1 == argc && isU == TRUE)
     {
-        printf("bol zadany jeden non-option argument a to %s\n", argv[optind]);
+        int currentLine =0, keyLenght, isWantedKey;
+        char *nonOptionArg = argv[optind];
+        //printf("bol zadany jeden non-option argument a to %s\n", argv[optind]);
+        if (sectionSet == TRUE)
+        {
+            keyLenght = strlen(key);
+            int sectionLine = findSectionLine(lineCount, input, section);
+            if (sectionLine != SECTION_NOT_FOUND)
+            {
+                currentLine = sectionLine +1;
+                while (input[currentLine][0] != '[')
+                {
+                    if (input[currentLine][0] == ';')
+                    {
+                        currentLine++;
+                        continue;
+                    }
+                    isWantedKey = checkKey(&input, &key, currentLine, keyLenght);
+                    
+                    if (isWantedKey == TRUE)
+                    {
+                        // printf("kluc je tu %d\n", currentLine);
+                        //printf("test3"); 
+                        updateValue(&input, currentLine, &argv);
+                        break;
+                    }
+                    currentLine++;
+                }
+                printLines(lineCount, input); 
+            }
+            
+        }
+        
+
+        
     }
-    else if(isU == 1)
+    else if(isU == TRUE)
     {
         printf("E3\n");
         return 0;
@@ -179,7 +227,7 @@ int userInput(int size, char ***p_input)
             dvaPrazdne = 0;
             (*p_input)[count] = (char*)malloc((lenght + 1) * sizeof(char));
         }
-        
+
         strcpy((*p_input)[count], buffer);
         count++;
     } while (dvaPrazdne <2);
@@ -194,7 +242,7 @@ void printLines(int amount, char **lines)
     }   
 }
 
-void extractSectionAndKey(int size , char **p_section, char**p_key)
+void extractSectionAndKey(char **p_section, char**p_key)
 {
     int charCount = 0, optargLenght, keyLenght;
     optargLenght = strlen(optarg);
@@ -222,7 +270,7 @@ int findSectionLine(int lineAmount, char **p_input, char *p_section)
             return i;
         }
     }
-    if (exists = FALSE)
+    if (exists == FALSE)
     {
         return SECTION_NOT_FOUND;
     }
@@ -264,7 +312,7 @@ int checkKey(char***p_input, char**p_key , int lineToCheck, int keyLenght)
 
 void printKeyValue(char ***p_input, int lineNumber)
 {
-    int charCount = 0, valueStart = 0, whiteSpaceCount = 0, lenghtAfterRovnitko;
+    int valueStart = 0, whiteSpaceCount = 0, lenghtAfterRovnitko;
     char* p_zaRovnitkom;
     p_zaRovnitkom = strchr((*p_input)[lineNumber], KEY_VALUE_SEPARATOR)+1;
 
@@ -283,4 +331,41 @@ void printKeyValue(char ***p_input, int lineNumber)
 
     printf("%s\n", p_zaRovnitkom);
 
+}
+
+void updateValue(char ***p_input, int lineNumber, char*** newValue)
+{
+    int valueStart = 0, whiteSpaceCount = 0, lenghtAfterRovnitko;
+    int whiteSpaceFromRight =0, updatedLenght, newValueLenght;
+    char* p_zaRovnitkom;
+
+    (*p_input)[lineNumber] = (char*)realloc((*p_input)[lineNumber], 256);
+    p_zaRovnitkom = strchr((*p_input)[lineNumber], KEY_VALUE_SEPARATOR)+1;
+
+    while (isspace(p_zaRovnitkom[valueStart]) != FALSE)
+    {
+        valueStart++;
+    }
+    p_zaRovnitkom = p_zaRovnitkom+valueStart;
+
+    lenghtAfterRovnitko = strlen(p_zaRovnitkom);   
+    //spocitanie whitespejcov za hodnotou 
+    while (lenghtAfterRovnitko > 0 && isspace(p_zaRovnitkom[lenghtAfterRovnitko-1]))
+    {
+        lenghtAfterRovnitko--;
+        whiteSpaceFromRight++;
+    }
+    newValueLenght = strlen((*newValue)[optind]);
+    
+    //printf("%d", whiteSpaceFromRight);
+    memset(p_zaRovnitkom, '\0', newValueLenght+2);
+    strcpy(p_zaRovnitkom, (*newValue)[optind]);
+    lenghtAfterRovnitko = strlen(p_zaRovnitkom);
+    //posun o nacitanu hodnotu
+    p_zaRovnitkom = p_zaRovnitkom + newValueLenght;
+    memset(p_zaRovnitkom, ' ', whiteSpaceFromRight-1);
+    p_zaRovnitkom = p_zaRovnitkom + (whiteSpaceFromRight-1);
+    // updatedLenght = strlen;
+    memset(p_zaRovnitkom, '\n', 1);
+    //printf("%s", (*p_input)[lineNumber]);
 }
