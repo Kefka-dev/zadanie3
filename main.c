@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <unistd.h>
 
 #define MAX_LINE_LENGHT 1000
@@ -14,6 +15,7 @@ int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
 void extractSectionAndKey(int size,char **p_section, char** p_key);
 int findSectionLine(int lineAmount, char **p_input, char *p_section);
+int checkKey(char***p_input,char**p_key ,int lineToCheck, int keyLenght);
 
 int main(int argc, char* argv[])
 {
@@ -34,8 +36,7 @@ int main(int argc, char* argv[])
         case 'k':
             char *section;
             char *key;
-            int dlzkaOptarg;
-            int sectionExists = FALSE;
+            int currentLine, keyLenght, isWantedKey;
             //ak je zadana nepovinna cast povinneho argumentu
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
@@ -43,14 +44,30 @@ int main(int argc, char* argv[])
                 extractSectionAndKey(size, &section, &key);
                 printf("%s\n", section);
                 printf("%s\n", key);
+                keyLenght = strlen(key);
                 int sectionLine = findSectionLine(lineCount, input, section);
-                printf("%d", dlzkaOptarg);
-                // if (sectionLine != SECTION_NOT_FOUND)
-                // {
+                printf("section line = %d\n", sectionLine);
+                if (sectionLine != SECTION_NOT_FOUND)
+                {
+                    currentLine = sectionLine +1;
+                    while (input[currentLine][0] != '[')
+                    {
+                        if (input[currentLine][0] == ';')
+                        {
+                            continue;
+                        }
+                        isWantedKey = checkKey(&input, &key, currentLine, keyLenght);
+                        if (isWantedKey == TRUE)
+                        {
+                            printf("kluc je tu %d", currentLine);
+                            break;
+                        }
+                        currentLine++;
+                    }
                     
-
-                    
-                // }
+                }
+                
+                
             }
             else
             {
@@ -149,10 +166,13 @@ void extractSectionAndKey(int size , char **p_section, char**p_key)
 {
     int charCount = 0, optargLenght, keyLenght;
     optargLenght = strlen(optarg);
+    
+    //vypocet dlžky section
     while (optarg[charCount] != SECTION_SEPARATOR)
     {
         charCount++;
     }
+
     keyLenght = optargLenght - charCount;
     *p_section = (char*)malloc((charCount+1)* sizeof(char));
     *p_key = (char*)malloc((keyLenght + 1) * sizeof(char));
@@ -173,6 +193,39 @@ int findSectionLine(int lineAmount, char **p_input, char *p_section)
     if (exists = FALSE)
     {
         return SECTION_NOT_FOUND;
+    }
+    
+}
+
+int checkKey(char***p_input,char**p_key , int lineToCheck, int keyLenght)
+{
+    int charCount = 0, keyStart = 0, whiteSpaceCount = 0;
+    while (isspace((*p_input)[lineToCheck][keyStart] != FALSE))
+    {
+        keyStart++;
+    }
+    //printf("keyStart = %d, pre %s", keyStart, (*p_input)[lineToCheck]);
+    while (whiteSpaceCount<2 && (*p_input)[lineToCheck][charCount] != '=')
+    {
+        if ((*p_input)[lineToCheck][(charCount + keyStart)] == ' ')
+        {
+            whiteSpaceCount++;
+            //printf("whiteSpaceCount = %d\n", whiteSpaceCount);
+        }
+        charCount++;
+    }
+    //printf("charCount = %d, pre %s", charCount, (*p_input)[lineToCheck]);
+    //strncmp vrati 0 ak sa stringi rovnaju
+    if (charCount == keyLenght)
+    {
+        if (strncmp(*p_key, (*p_input)[lineToCheck], keyLenght) == 0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            return FALSE;
+        }
     }
     
 }
