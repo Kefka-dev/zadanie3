@@ -10,12 +10,14 @@
 #define TRUE 1
 #define FALSE 0
 #define SECTION_NOT_FOUND -1
+#define KEY_VALUE_SEPARATOR '='
 
 int userInput(int size, char ***p_input);
 void printLines(int amount, char **lines);
 void extractSectionAndKey(int size,char **p_section, char** p_key);
 int findSectionLine(int lineAmount, char **p_input, char *p_section);
 int checkKey(char***p_input,char**p_key ,int lineToCheck, int keyLenght);
+void printKeyValue(char ***p_input, int lineNumber);
 
 int main(int argc, char* argv[])
 {
@@ -36,14 +38,15 @@ int main(int argc, char* argv[])
         case 'k':
             char *section;
             char *key;
-            int currentLine, keyLenght, isWantedKey;
+            int currentLine =0, keyLenght, isWantedKey;
             //ak je zadana nepovinna cast povinneho argumentu
+            // printf("%s\n", optarg);
             if (strchr(optarg, SECTION_SEPARATOR) != NULL)
             {
                 
                 extractSectionAndKey(size, &section, &key);
-                printf("%s\n", section);
-                printf("%s\n", key);
+                // printf("%s\n", section);
+                // printf("%s\n", key);
                 keyLenght = strlen(key);
                 int sectionLine = findSectionLine(lineCount, input, section);
                 printf("section line = %d\n", sectionLine);
@@ -54,27 +57,56 @@ int main(int argc, char* argv[])
                     {
                         if (input[currentLine][0] == ';')
                         {
+                            currentLine++;
                             continue;
                         }
                         isWantedKey = checkKey(&input, &key, currentLine, keyLenght);
+                        
                         if (isWantedKey == TRUE)
                         {
-                            printf("kluc je tu %d", currentLine);
+                            // printf("kluc je tu %d\n", currentLine);
+                            printKeyValue(&input,  currentLine);
                             break;
                         }
                         currentLine++;
                     }
-                    
                 }
-                
-                
+                free(section);
+                free(key);
             }
             else
             {
-                printf("pipik");
+                keyLenght = strlen(optarg);
+                while (currentLine < lineCount)
+                {
+                    if (input[currentLine][0] == ';')
+                    {
+                        currentLine++;
+                        continue;
+                    }
+
+                    if ( input[currentLine][0] == '[')
+                    {
+                        currentLine++;
+                        continue;
+                    }
+
+                    if ( input[currentLine][0] == '\n')
+                    {
+                        currentLine++;
+                        continue;
+                    }
+                    
+                    isWantedKey = checkKey(&input, &optarg, currentLine, keyLenght);
+                    
+                    if (isWantedKey == TRUE)
+                    {
+                        // printf("kluc je tu %d\n", currentLine);
+                        printKeyValue(&input,  currentLine);
+                    }
+                    currentLine++;
+                }
             }
-            
-            free(section);
             break;
         case 's':
             printf("Prepinac -s a jeho povinny argument %s\n", optarg);
@@ -197,10 +229,10 @@ int findSectionLine(int lineAmount, char **p_input, char *p_section)
     
 }
 
-int checkKey(char***p_input,char**p_key , int lineToCheck, int keyLenght)
+int checkKey(char***p_input, char**p_key , int lineToCheck, int keyLenght)
 {
     int charCount = 0, keyStart = 0, whiteSpaceCount = 0;
-    while (isspace((*p_input)[lineToCheck][keyStart] != FALSE))
+    while (isspace((*p_input)[lineToCheck][keyStart]) != FALSE)
     {
         keyStart++;
     }
@@ -228,4 +260,27 @@ int checkKey(char***p_input,char**p_key , int lineToCheck, int keyLenght)
         }
     }
     
+}
+
+void printKeyValue(char ***p_input, int lineNumber)
+{
+    int charCount = 0, valueStart = 0, whiteSpaceCount = 0, lenghtAfterRovnitko;
+    char* p_zaRovnitkom;
+    p_zaRovnitkom = strchr((*p_input)[lineNumber], KEY_VALUE_SEPARATOR)+1;
+
+    while (isspace(p_zaRovnitkom[valueStart]) != FALSE)
+    {
+        valueStart++;
+    }
+    p_zaRovnitkom = p_zaRovnitkom+valueStart;
+    //odstranenie whitespaces za rovnitkom
+    lenghtAfterRovnitko = strlen(p_zaRovnitkom);    
+    while (lenghtAfterRovnitko > 0 && isspace(p_zaRovnitkom[lenghtAfterRovnitko-1]))
+    {
+        lenghtAfterRovnitko--;
+    }
+    p_zaRovnitkom[lenghtAfterRovnitko] = '\0';
+
+    printf("%s\n", p_zaRovnitkom);
+
 }
