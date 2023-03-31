@@ -19,6 +19,7 @@ int findSectionLine(int lineAmount, char **p_input, char *p_section);
 int checkKey(char***p_input,char**p_key ,int lineToCheck, int keyLenght);
 void printKeyValue(char ***p_input, int lineNumber);
 void updateValue(char ***p_input, int lineNumber, char*** newValue);
+void addNewKey(char ***p_input, int lineNumber, char** keyToAdd, char*** valueToAdd);
 
 int main(int argc, char* argv[])
 {
@@ -146,7 +147,7 @@ int main(int argc, char* argv[])
 
     if (optind + 1 == argc && isU == TRUE)
     {
-        int currentLine =0, keyLenght, isWantedKey;
+        int currentLine =0, keyLenght, isWantedKey = FALSE;
         char *nonOptionArg = argv[optind];
         //printf("bol zadany jeden non-option argument a to %s\n", argv[optind]);
         if (sectionSet == TRUE)
@@ -164,16 +165,27 @@ int main(int argc, char* argv[])
                         continue;
                     }
                     isWantedKey = checkKey(&input, &key, currentLine, keyLenght);
-                    
+                    //printf("%d\n", isWantedKey);
                     if (isWantedKey == TRUE)
                     {
                         // printf("kluc je tu %d\n", currentLine);
                         //printf("test3"); 
                         updateValue(&input, currentLine, &argv);
+                        printf("test");
                         break;
+                    }
+                    else
+                    {
+                        isWantedKey = FALSE;
                     }
                     currentLine++;
                 }
+
+                if (isWantedKey == FALSE)
+                {
+                    addNewKey(&input, currentLine -1, &key, &argv);
+                }
+                
                 printLines(lineCount, input); 
             }
             
@@ -368,4 +380,18 @@ void updateValue(char ***p_input, int lineNumber, char*** newValue)
     // updatedLenght = strlen;
     memset(p_zaRovnitkom, '\n', 1);
     //printf("%s", (*p_input)[lineNumber]);
+}
+
+void addNewKey(char ***p_input, int lineNumber, char** keyToAdd, char*** valueToAdd)
+{
+    int newKeyLenght;
+    (*p_input)[lineNumber]=(char*)realloc((*p_input)[lineNumber], 256);
+
+    strcpy((*p_input)[lineNumber], *keyToAdd);
+    newKeyLenght = strlen(*keyToAdd);
+    //printf("%d", newKeyLenght);
+    (*p_input)[lineNumber][newKeyLenght] = '=';
+    strcpy(&((*p_input)[lineNumber][newKeyLenght+1]), (*valueToAdd)[optind]);
+    memset(&((*p_input)[lineNumber][newKeyLenght+2]), '\n', 2);
+    //printf("%s",(*p_input)[lineNumber]);
 }
