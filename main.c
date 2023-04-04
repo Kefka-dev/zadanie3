@@ -169,9 +169,7 @@ int main(int argc, char* argv[])
                     if (isWantedKey == TRUE)
                     {
                         // printf("kluc je tu %d\n", currentLine);
-                        //printf("test3"); 
                         updateValue(&input, currentLine, &argv);
-                        printf("test");
                         break;
                     }
                     else
